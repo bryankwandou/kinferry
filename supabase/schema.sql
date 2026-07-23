@@ -1,0 +1,10 @@
+create table recipients(id uuid primary key default gen_random_uuid(),sender_id uuid not null,name text not null,wallet_address text not null,verification_status text not null default 'pending',created_at timestamptz not null default now());
+create table recipient_verifications(id uuid primary key default gen_random_uuid(),recipient_id uuid not null references recipients(id),token_hash text not null unique,expires_at timestamptz not null,used_at timestamptz);
+create table fx_quotes(id uuid primary key default gen_random_uuid(),sender_id uuid not null,rate numeric not null,send_amount numeric not null,receive_amount numeric not null,locked_until timestamptz not null,created_at timestamptz not null default now());
+create table transfers(id uuid primary key default gen_random_uuid(),sender_id uuid not null,recipient_id uuid not null references recipients(id),quote_id uuid references fx_quotes(id),request_nonce text not null,amount numeric not null,status text not null,tx_signature text,created_at timestamptz not null default now(),unique(sender_id,request_nonce));
+create table recurring_schedules(id uuid primary key default gen_random_uuid(),sender_id uuid not null,recipient_id uuid not null references recipients(id),amount numeric not null,cadence text not null,next_run_at timestamptz not null,active boolean not null default true);
+alter table recipients enable row level security;alter table fx_quotes enable row level security;alter table transfers enable row level security;alter table recurring_schedules enable row level security;
+create policy "sender recipients" on recipients for all using(sender_id=auth.uid()) with check(sender_id=auth.uid());
+create policy "sender quotes" on fx_quotes for all using(sender_id=auth.uid()) with check(sender_id=auth.uid());
+create policy "sender transfers" on transfers for select using(sender_id=auth.uid());
+create policy "sender schedules" on recurring_schedules for all using(sender_id=auth.uid()) with check(sender_id=auth.uid());

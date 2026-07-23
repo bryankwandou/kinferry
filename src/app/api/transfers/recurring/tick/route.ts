@@ -1,0 +1,1 @@
+import {NextResponse} from "next/server";import {evaluate} from "@/lib/safety";export async function POST(){const check=evaluate({recipient_id:"maria",usdc_amount:180,request_nonce:`schedule-${Date.now()}`,locked_until:new Date(Date.now()+60_000).toISOString()});return NextResponse.json({processed:check.ok?1:0,blocked:check.ok?0:1,reason:check.reason})}

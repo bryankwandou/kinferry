@@ -13,6 +13,9 @@
 - Put regulatory boundaries on the landing page instead of hiding them in documentation.
 - Separated warm family-facing language from hard infrastructure evidence.
 - Deployed the policy and allowlist authority layer to real Solana devnet.
+- Replaced the static profile chip with a global wallet session and live balance.
+- Replaced static history with real program signatures from devnet.
+- Added a second Groq workflow for post-settlement confirmation.
 
 ## Design review
 

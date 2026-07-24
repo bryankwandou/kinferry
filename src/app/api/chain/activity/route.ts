@@ -1,0 +1,1 @@
+import {NextResponse} from "next/server";import {getProgramActivity} from "@/lib/chain";export const revalidate=30;export async function GET(){try{return NextResponse.json({activity:await getProgramActivity()})}catch{return NextResponse.json({activity:[],error:"Devnet activity temporarily unavailable."},{status:503})}}

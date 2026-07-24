@@ -15,4 +15,6 @@ const reuse=await post("/api/recipients/verify",{verification_token:token,public
 const receipt=await post("/api/recipients/receipt",{verification_receipt:verified.body.verification_receipt});results.push(["receipt_valid",receipt.code===200&&receipt.body.recipient.wallet===recipient.publicKey.toBase58()]);
 const unauthorized=await post("/api/transfers/recurring/tick",{});results.push(["cron_unauthorized",unauthorized.code===401]);
 const chain=await fetch(base+"/api/chain/status").then(response=>response.json());results.push(["chain_live",chain.deployed===true]);
+const activity=await fetch(base+"/api/chain/activity").then(response=>response.json());results.push(["chain_activity",Array.isArray(activity.activity)&&activity.activity.length>0]);
+const confirmation=await post("/api/agent/confirm",{recipient:"Maria Santos",intent_amount:180,receive_amount:10584,currency:"PHP",purpose:"school supplies",tx_signature:"5z7cfzcCamdUvGAWMDPY42bGyTcDUMJdgr4ho5YYHJYo2fJUFsaUaUF9vdBf6XFnQ5ikku4ak17cEEbFTKCAA3Zp"});results.push(["agent_confirmation",confirmation.code===200&&typeof confirmation.body.message==="string"&&confirmation.body.message.length>20]);
 for(const[name,passed]of results)console.log(`${passed?"PASS":"FAIL"}\t${name}`);if(results.some(([,passed])=>!passed))process.exit(1);

@@ -22,6 +22,9 @@ Validated on Friday, July 24, 2026.
 | Anchor program build | SBF binary and IDL generated | Pass |
 | Solana devnet deployment | Program confirmed on-chain | Pass |
 | Live chain proof endpoint | Deployed program account returned | Pass |
+| Live chain activity endpoint | Confirmed program signatures returned | Pass |
+| AI settlement confirmation | Groq confirmation generated from real signature data | Pass |
+| Global wallet control | Connected address and live devnet balance displayed | Pass |
 | Recipient wallet signature | Ed25519 signature verified against invited public key | Pass |
 | Sender policy initialization | Owner-signed policy PDA created on devnet | Pass |
 | Verified recipient activation | Owner-signed allowlist PDA created on devnet | Pass |

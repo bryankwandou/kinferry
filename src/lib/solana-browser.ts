@@ -1,0 +1,17 @@
+"use client";
+import {Connection,PublicKey,SystemProgram,Transaction,TransactionInstruction} from "@solana/web3.js";
+import {Buffer} from "buffer";
+import {PROGRAM_ID} from "./chain";
+
+const PROGRAM=new PublicKey(PROGRAM_ID);const RPC=process.env.NEXT_PUBLIC_SOLANA_RPC_URL||"https://api.devnet.solana.com";
+const discriminators={initialize:new Uint8Array([9,186,86,225,129,162,231,56]),add:new Uint8Array([207,170,166,28,210,186,242,145]),execute:new Uint8Array([233,126,160,184,235,206,31,119])};
+export function provider(){if(typeof window==="undefined"||!window.solana)throw new Error("Install or unlock a Solana browser wallet such as Phantom.");return window.solana}
+export async function connectWallet(){return(await provider().connect()).publicKey}
+export function policyPda(owner:PublicKey){return PublicKey.findProgramAddressSync([new TextEncoder().encode("policy"),owner.toBuffer()],PROGRAM)[0]}
+export function allowlistPda(owner:PublicKey,recipient:PublicKey){return PublicKey.findProgramAddressSync([new TextEncoder().encode("recipient"),owner.toBuffer(),recipient.toBuffer()],PROGRAM)[0]}
+function u64(value:number|bigint){const data=new Uint8Array(8);new DataView(data.buffer).setBigUint64(0,BigInt(value),true);return data}
+async function send(owner:PublicKey,instruction:TransactionInstruction){const connection=new Connection(RPC,"confirmed");const{blockhash,lastValidBlockHeight}=await connection.getLatestBlockhash("confirmed");const transaction=new Transaction({feePayer:owner,blockhash,lastValidBlockHeight}).add(instruction);const{signature}=await provider().signAndSendTransaction(transaction);await connection.confirmTransaction({signature,blockhash,lastValidBlockHeight},"confirmed");return signature}
+export async function initializePolicy(owner:PublicKey){const policy=policyPda(owner);const instruction=new TransactionInstruction({programId:PROGRAM,keys:[{pubkey:policy,isSigner:false,isWritable:true},{pubkey:owner,isSigner:true,isWritable:true},{pubkey:SystemProgram.programId,isSigner:false,isWritable:false}],data:Buffer.concat([Buffer.from(discriminators.initialize),Buffer.from(u64(10_000_000)),Buffer.from(u64(50_000_000))])});return send(owner,instruction)}
+export async function addVerifiedRecipient(owner:PublicKey,recipient:PublicKey){const instruction=new TransactionInstruction({programId:PROGRAM,keys:[{pubkey:policyPda(owner),isSigner:false,isWritable:false},{pubkey:allowlistPda(owner,recipient),isSigner:false,isWritable:true},{pubkey:owner,isSigner:true,isWritable:true},{pubkey:recipient,isSigner:false,isWritable:false},{pubkey:SystemProgram.programId,isSigner:false,isWritable:false}],data:Buffer.from(discriminators.add)});return send(owner,instruction)}
+export async function executeDevnetTransfer(owner:PublicKey,recipient:PublicKey,lamports=1_000_000){const instruction=new TransactionInstruction({programId:PROGRAM,keys:[{pubkey:policyPda(owner),isSigner:false,isWritable:true},{pubkey:allowlistPda(owner,recipient),isSigner:false,isWritable:false},{pubkey:owner,isSigner:true,isWritable:true},{pubkey:recipient,isSigner:false,isWritable:true},{pubkey:SystemProgram.programId,isSigner:false,isWritable:false}],data:Buffer.concat([Buffer.from(discriminators.execute),Buffer.from(u64(lamports))])});return send(owner,instruction)}
+export async function accountExists(address:PublicKey){const connection=new Connection(RPC,"confirmed");return Boolean(await connection.getAccountInfo(address))}

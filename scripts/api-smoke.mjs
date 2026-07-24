@@ -1,0 +1,18 @@
+import nacl from "tweetnacl";
+import {Keypair} from "@solana/web3.js";
+
+const base=process.env.TEST_BASE_URL||"http://localhost:3417";const results=[];
+async function post(path,body,headers={}){const response=await fetch(base+path,{method:"POST",headers:{"content-type":"application/json",...headers},body:JSON.stringify(body)});let data={};try{data=await response.json()}catch{}return{code:response.status,body:data}}
+const landing=await fetch(base);results.push(["landing",landing.status===200]);
+const agent=await post("/api/agent/parse",{instruction:"Send Maria 180 dollars next Friday"});results.push(["agent_ready",agent.code===200&&agent.body.status==="ready"&&agent.body.amount===180]);
+const quote=await post("/api/quotes/generate",{sender_id:"smoke",from_currency:"USDC",to_currency:"PHP",send_amount:180});results.push(["signed_quote",quote.code===200&&Boolean(quote.body.quote_token)]);
+const forged=quote.body.quote_token.slice(0,-1)+"x";const forgedResult=await post("/api/transfers/execute",{sender_id:"smoke",recipient_id:"maria",usdc_amount:180,request_nonce:"smoke-forged-01",raw_instruction:"smoke transfer",quote_token:forged});results.push(["forged_quote_blocked",forgedResult.code===409]);
+const approved=await post("/api/transfers/execute",{sender_id:"smoke",recipient_id:"maria",usdc_amount:180,request_nonce:"smoke-valid-01",raw_instruction:"smoke maria school",quote_token:quote.body.quote_token});results.push(["guard_approved",approved.code===200&&approved.body.status==="approved"]);
+const quoteTwo=await post("/api/quotes/generate",{sender_id:"smoke",from_currency:"USDC",to_currency:"PHP",send_amount:180});const duplicate=await post("/api/transfers/execute",{sender_id:"smoke",recipient_id:"maria",usdc_amount:180,request_nonce:"smoke-valid-02",raw_instruction:"smoke maria school",quote_token:quoteTwo.body.quote_token});results.push(["content_duplicate_blocked",duplicate.code===409]);
+const recipient=Keypair.generate();const invite=await post("/api/recipients/invite",{name:"API Smoke",country:"Indonesia",contact:"smoke@example.com",wallet:recipient.publicKey.toBase58()});const token=invite.body.verification_path?.split("/").at(-1);results.push(["signed_invite",invite.code===200&&Boolean(token)]);
+const challenge=new TextEncoder().encode(`Kinferry recipient verification\n${token}`);const signature=Buffer.from(nacl.sign.detached(challenge,recipient.secretKey)).toString("base64");const verified=await post("/api/recipients/verify",{verification_token:token,public_key:recipient.publicKey.toBase58(),signature});results.push(["wallet_signature_verified",verified.code===200&&Boolean(verified.body.verification_receipt)]);
+const reuse=await post("/api/recipients/verify",{verification_token:token,public_key:recipient.publicKey.toBase58(),signature});results.push(["verification_reuse_blocked",reuse.code===409]);
+const receipt=await post("/api/recipients/receipt",{verification_receipt:verified.body.verification_receipt});results.push(["receipt_valid",receipt.code===200&&receipt.body.recipient.wallet===recipient.publicKey.toBase58()]);
+const unauthorized=await post("/api/transfers/recurring/tick",{});results.push(["cron_unauthorized",unauthorized.code===401]);
+const chain=await fetch(base+"/api/chain/status").then(response=>response.json());results.push(["chain_live",chain.deployed===true]);
+for(const[name,passed]of results)console.log(`${passed?"PASS":"FAIL"}\t${name}`);if(results.some(([,passed])=>!passed))process.exit(1);

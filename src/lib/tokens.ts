@@ -1,0 +1,4 @@
+import {createHmac,timingSafeEqual} from "node:crypto";
+const secret=()=>process.env.KINFERRY_SIGNING_SECRET||process.env.CRON_SECRET||"kinferry-dev-only-secret-change-me";
+export function signToken(payload:Record<string,unknown>){const body=Buffer.from(JSON.stringify(payload)).toString("base64url");const signature=createHmac("sha256",secret()).update(body).digest("base64url");return `${body}.${signature}`}
+export function verifyToken<T>(token:string):T|null{const[body,signature]=token.split(".");if(!body||!signature)return null;const expected=createHmac("sha256",secret()).update(body).digest("base64url");const a=Buffer.from(signature);const b=Buffer.from(expected);if(a.length!==b.length||!timingSafeEqual(a,b))return null;try{const payload=JSON.parse(Buffer.from(body,"base64url").toString()) as T&{exp?:number};if(payload.exp&&payload.exp<Date.now())return null;return payload}catch{return null}}

@@ -1,0 +1,3 @@
+import {NextResponse} from "next/server";import {z} from "zod";import {signToken} from "@/lib/tokens";
+const schema=z.object({name:z.string().min(2).max(80),contact:z.string().min(5).max(120),wallet:z.string().min(12).max(64),country:z.string().min(2).max(60)});
+export async function POST(request:Request){const parsed=schema.safeParse(await request.json());if(!parsed.success)return NextResponse.json({error:"Complete every recipient field."},{status:400});const token=signToken({type:"recipient_verification",jti:crypto.randomUUID(),...parsed.data,exp:Date.now()+24*60*60_000});return NextResponse.json({status:"pending",verification_path:`/verify/${token}`,expires_in_hours:24})}

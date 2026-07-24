@@ -1,0 +1,1 @@
+import {NextResponse} from "next/server";import {getProgramProof} from "@/lib/chain";export const revalidate=60;export async function GET(){try{return NextResponse.json(await getProgramProof())}catch{return NextResponse.json({deployed:false,error:"Devnet RPC unavailable"},{status:503})}}

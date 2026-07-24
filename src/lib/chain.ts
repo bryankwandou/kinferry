@@ -1,0 +1,4 @@
+import {Connection,PublicKey} from "@solana/web3.js";
+export const PROGRAM_ID="HZiw1u9BoKkdhppnN22HJzXUQJDca2yMeDY8wqywSdEs";
+const endpoints=()=>[process.env.NEXT_PUBLIC_SOLANA_RPC_URL,"https://solana-devnet.api.onfinality.io/public","https://rpc.ankr.com/solana_devnet"].filter(Boolean) as string[];
+export async function getProgramProof(){const key=new PublicKey(PROGRAM_ID);let lastError:unknown;for(const endpoint of endpoints()){try{const connection=new Connection(endpoint,"confirmed");const account=await connection.getAccountInfo(key);if(!account)throw new Error("Program account not found");return{program_id:PROGRAM_ID,cluster:"devnet",rpc_host:new URL(endpoint).host,deployed:account.executable,executable:account.executable,data_bytes:account.data.length,lamports:account.lamports,explorer_url:`https://explorer.solana.com/address/${PROGRAM_ID}?cluster=devnet`}}catch(error){lastError=error}}throw lastError||new Error("All devnet RPC endpoints failed")}

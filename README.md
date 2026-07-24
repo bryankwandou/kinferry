@@ -7,15 +7,17 @@ Kinferry is a Solana devnet remittance-agent MVP built around one rule: an agent
 - Interactive landing page and sender workspace
 - Recipient-owned, single-use verification endpoint
 - Natural-language transfer drafting with optional Groq parsing
-- Five-minute FX quote locks
-- Duplicate request, recipient allowlist, and spending-policy checks
+- Server-signed FX quote locks that reject forged expiry or amount changes
+- Nonce and content-fingerprint duplicate protection
+- Signed, expiring, single-use recipient verification links
 - Recurring transfers routed through the same guard chain
 - Anchor program for owner-only allowlisting and on-chain spending caps
+- Live Solana devnet proof page with RPC fallback
 - Immutable-history UX, responsive layouts, and reduced-motion support
 
 ## Routes
 
-`/`, `/dashboard`, `/recipients`, `/recipients/new`, `/transfer/new`, `/recurring`, `/history`, and `/verify/[token]`.
+`/`, `/dashboard`, `/recipients`, `/recipients/new`, `/transfer/new`, `/recurring`, `/history`, `/proof`, and `/verify/[token]`.
 
 ## Local development
 

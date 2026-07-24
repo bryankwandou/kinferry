@@ -2,7 +2,7 @@
 
 ## Honest score
 
-**MVP readiness: 86/100.** The product is demo-ready and technically coherent. It is not 100/100 because regulated remittance cannot be honestly called production-ready without licensed ramps, KYC/AML, sanctions controls, custody design, an oracle strategy, monitoring, and an independent audit.
+**MVP readiness: 91/100.** The product is demo-ready and technically coherent. It is not 100/100 because regulated remittance cannot be honestly called production-ready without licensed ramps, KYC/AML, sanctions controls, custody design, an oracle strategy, monitoring, and an independent audit.
 
 ## What was strengthened
 
